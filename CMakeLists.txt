@@ -15,8 +15,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(USE_USER_BUS "Uses user bus" OFF)
 
 find_package(Git)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GLIB REQUIRED gio-unix-2.0)
 
 # Set version number and update submodules
 if(EXISTS ${PROJECT_SOURCE_DIR}/.git AND GIT_FOUND)
