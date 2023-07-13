@@ -26,6 +26,16 @@ using namespace logid::features;
 using namespace logid::backend;
 using namespace logid;
 
+### ADDED
+#include <chrono>
+using namespace std::chrono;
+
+int8_t count = 0;
+milliseconds last_thumb_scroll_event = duration_cast< milliseconds >(
+    system_clock::now().time_since_epoch()
+);
+## TILL HERE
+
 #define FLAG_STR(b) (_wheel_info.capabilities & _thumb_wheel->b ? "YES" : "NO")
 
 namespace {
@@ -195,10 +205,42 @@ void ThumbWheel::_handleEvent(hidpp20::ThumbWheel::ThumbwheelEvent event) {
             int8_t direction = event.rotation > 0 ? 1 : -1;
             std::shared_ptr<actions::Gesture> scroll_action;
 
-            if (direction > 0)
-                scroll_action = _right_gesture;
-            else
-                scroll_action = _left_gesture;
+                  milliseconds this_event = duration_cast< milliseconds >(
+                system_clock::now().time_since_epoch()
+            );
+
+            auto since_last_event = std::chrono::duration_cast<std::chrono::milliseconds>(this_event - last_thumb_scroll_event);
+
+            if(since_last_event.count() > 250) {
+                count = 0;
+            }
+
+            last_thumb_scroll_event = this_event;
+
+            if(direction > 0) {
+                if (count < 0) {
+                    count = 1;
+                }
+                else {
+                    count += direction;
+                    if(count > 5) {
+                        scroll_action = _config.rightAction();
+                        count = 0;
+                    }
+                }
+            }
+            else {
+                if (count > 0) {
+                    count = -1;
+                }
+                else {
+                    count += direction;
+                    if(count < -5) {
+                        scroll_action = _config.leftAction();
+                        count = 0;
+                    }
+                }
+            }
 
             if (scroll_action) {
                 scroll_action->press(true);
